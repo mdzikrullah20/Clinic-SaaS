@@ -1,16 +1,64 @@
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import HomePage from "./components/Homepage";
-import { getServerSession } from "next-auth"; // or your auth provider
 
-export default async function Page() {
-  const session = await getServerSession();
+type UserData = {
+  name: string;
+  email: string;
+  activePrescriptionsCount: number;
+  lastOrderStatus: string;
+};
 
-  // Format user prop if logged in
-  const userData = session?.user ? {
-    name: session.user.name || "Patient",
-    email: session.user.email || "",
-    activePrescriptionsCount: 3,
-    lastOrderStatus: "Out for delivery today"
-  } : null;
+export default function Home() {
+  const router = useRouter();
+  const [loading, setLoading] = useState<boolean>(true);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
-  return <HomePage user={userData} />;
+  useEffect(() => {
+    const userRole = localStorage.getItem("user_role");
+    const storedUser = localStorage.getItem("user");
+
+    if (userRole === "admin") {
+      router.push("/admin");
+      return;
+    }
+
+    if (storedUser) {
+      try {
+        const parsed = JSON.parse(storedUser);
+        setUserData({
+          name: parsed.name || "Patient",
+          email: parsed.email || "",
+          activePrescriptionsCount: parsed.activePrescriptionsCount || 1,
+          lastOrderStatus: parsed.lastOrderStatus || "Delivered",
+        });
+      } catch (e) {
+        console.error("User data parsing error:", e);
+      }
+    } else {
+      setUserData({
+        name: "Valued Patient",
+        email: "patient@cliniccare.com",
+        activePrescriptionsCount: 2,
+        lastOrderStatus: "Processing",
+      });
+    }
+
+    setLoading(false);
+  }, [router]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-10 w-10 border-4 border-[#1b5e5d] border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-xs font-semibold text-slate-500">Loading ClinicCare Portal...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return <HomePage {...({ user: userData } as any)} />;
 }
