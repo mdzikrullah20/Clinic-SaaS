@@ -2,23 +2,52 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const router = useRouter();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    setError("");
+
+    setTimeout(() => {
+      const cleanIdentifier = identifier.trim();
+
+      // 1. ADMIN LOGIN CHECK
+      if (cleanIdentifier === "zikrullah" && password === "zikrullah") {
+        localStorage.setItem("user_role", "admin");
+        localStorage.setItem("username", "zikrullah");
+        document.cookie = "user_role=admin; path=/";
+        setIsLoading(false);
+        router.push("/admin");
+      }
+      // 2. NORMAL USER LOGIN CHECK
+      else if (cleanIdentifier.length > 0 && password.length > 0) {
+        localStorage.setItem("user_role", "user");
+        localStorage.setItem("username", cleanIdentifier);
+        document.cookie = "user_role=user; path=/";
+        setIsLoading(false);
+        window.location.href = "/"; // Triggers page refresh to load Home with UserHeader
+      } 
+      // 3. INVALID INPUT
+      else {
+        setIsLoading(false);
+        setError("Please enter a valid phone/email and password.");
+      }
+    }, 800);
   };
 
   return (
     <div className="min-h-screen w-full bg-slate-50 flex items-center justify-center p-4 sm:p-6 lg:p-8 font-sans">
       
-      {/* Main Glass/Card Container - Adapts to flex-col on mobile, flex-row on desktop */}
+      {/* Main Glass/Card Container */}
       <div className="w-full max-w-[1040px] flex flex-col md:flex-row bg-white rounded-2xl sm:rounded-[2rem] shadow-2xl shadow-slate-200/50 relative overflow-hidden border border-slate-100 min-h-auto md:min-h-[600px]">
         
         {/* Left Column: Login Form */}
@@ -33,19 +62,26 @@ export default function LoginPage() {
             </p>
           </div>
 
+          {/* Error Message Display */}
+          {error && (
+            <div className="mb-4 p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs font-semibold text-center">
+              {error}
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
             
             {/* Username/Email Field */}
             <div className="space-y-1.5 sm:space-y-2">
               <label className="block text-[10px] sm:text-[11px] font-bold text-[#5e6b82] uppercase tracking-wider">
-                Phone number or email
+                Phone number, email or username
               </label>
               <input
                 type="text"
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                placeholder="e.g. 98765 43210"
+                placeholder="zikrullah or your name/email"
                 className="w-full px-4 py-3 sm:py-3.5 bg-white border border-[#e2e8f0] rounded-xl sm:rounded-[14px] text-sm text-[#0a1128] placeholder:text-[#94a3b8] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all duration-200"
               />
             </div>
@@ -91,7 +127,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 sm:mt-4 bg-[#0a1128] hover:bg-[#111c3d] text-white py-3 sm:py-3.5 rounded-xl sm:rounded-[14px] text-[14px] sm:text-[15px] font-bold shadow-md transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center gap-2"
+              className="w-full mt-2 sm:mt-4 bg-[#0a1128] hover:bg-[#111c3d] text-white py-3 sm:py-3.5 rounded-xl sm:rounded-[14px] text-[14px] sm:text-[15px] font-bold shadow-md transition-all duration-200 active:scale-[0.98] disabled:opacity-70 disabled:active:scale-100 flex justify-center items-center gap-2 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -120,7 +156,7 @@ export default function LoginPage() {
           {/* Google Button */}
           <button
             type="button"
-            className="w-full bg-white border border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-slate-50 text-[#0a1128] py-3 sm:py-3.5 rounded-xl sm:rounded-[14px] text-[14px] sm:text-[15px] font-semibold shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3"
+            className="w-full bg-white border border-[#e2e8f0] hover:border-[#cbd5e1] hover:bg-slate-50 text-[#0a1128] py-3 sm:py-3.5 rounded-xl sm:rounded-[14px] text-[14px] sm:text-[15px] font-semibold shadow-sm transition-all duration-200 active:scale-[0.98] flex items-center justify-center gap-3 cursor-pointer"
           >
             <svg className="w-[16px] h-[16px] sm:w-[18px] sm:h-[18px]" viewBox="0 0 24 24">
               <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
