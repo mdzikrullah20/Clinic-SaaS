@@ -12,7 +12,7 @@ import {
   Award, 
   Truck, 
   Pill,
-  UploadCircle,
+  Upload,
   FileCheck2,
   PackageCheck,
   Star,
